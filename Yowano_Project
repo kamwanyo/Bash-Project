@@ -1,0 +1,87 @@
+#!/bin/bash
+
+# A simple file permissions manager script
+
+# Function to display usage information
+display_usage() {
+  echo "Usage: $0 [-h] filename"
+  echo "Options:"
+  echo "  Enter the correct name and file/folder path of the file/folder's permissions you would like to change
+  e.g. Yowano_Project ./README.md"
+}
+
+# Check if the user provides a file or directory name as an argument
+if [ $# -eq 0 ]; then
+  display_usage
+  exit 1
+fi
+
+# Handle options
+while getopts ":h" opt; do
+  case ${opt} in
+    h )
+      display_usage
+      exit 0
+      ;;
+    \? )
+      echo "Invalid Option: -$OPTARG" 1>&2
+      exit 1
+      ;;
+  esac
+done
+shift $((OPTIND -1))
+
+# Check if the file or directory exists
+if [ ! -e "$1" ]; then
+  echo "$1 does not exist"
+  exit 2
+fi
+
+# Display the current ownership and permissions of the file or directory
+echo "Current ownership and permissions of $1:"
+ls -l "$1"
+
+# Ask the user if they want to change the owner of the file or directory
+read -p "Do you want to change the owner of $1? (y/n) " answer
+if [[ "$answer" =~ ^[Yy]$ ]]; then
+  # Ask the user to enter the new owner name
+  read -p "Enter the new owner name: " owner
+  # Use the chown command to change the owner of the file or directory
+  sudo chown "$owner" "$1"
+  # Display a confirmation message
+  echo "Owner of $1 changed to $owner"
+fi
+
+# Ask the user if they want to change the group of the file or directory
+read -p "Do you want to change the group of $1? (y/n) " answer
+if [[ "$answer" =~ ^[Yy]$ ]]; then
+  # Ask the user to enter the new group name
+  read -p "Enter the new group name: " group
+  # Use the chgrp command to change the group of the file or directory
+  sudo chgrp "$group" "$1"
+  # Display a confirmation message
+  echo "Group of $1 changed to $group"
+fi
+
+# Ask the user if they want to change the access permissions of the file or directory
+read -p "Do you want to change the access permissions of $1? (y/n) " answer
+if [[ "$answer" =~ ^[Yy]$ ]]; then
+  # Ask the user to enter the new access permissions in octal format (e.g. 755)
+  read -p "Enter the new access permissions in octal format (e.g. 755): " mode
+  
+  # Check if mode is valid using regular expression 
+  if [[ ! "$mode" =~ ^[0-7]{3}$ ]]; then 
+    echo "Invalid mode. Please enter a three-digit octal number (e.g. 755)"
+    exit 3 
+  fi
+  
+  # Use the chmod command to change the access permissions of the file or directory 
+  sudo chmod "$mode" "$1"
+  
+   # Display a confirmation message 
+   echo "Access permissions of $1 changed to $mode"
+fi
+
+# Display the updated ownership and permissions of the file or directory 
+echo "Updated ownership and permissions of $1:"
+ls -l "$1"
